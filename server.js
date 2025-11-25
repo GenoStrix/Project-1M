@@ -7,6 +7,8 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+app.use(express.static("public"));
+
 // Koneksi Database
 const db = mysql.createConnection({
   host: process.env.DB_HOST,
@@ -76,4 +78,9 @@ app.post("/api/transactions", (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server jalan di port ${PORT}`));
+if (require.main === module) {
+  app.listen(PORT, () => console.log(`Server jalan di port ${PORT}`));
+}
+
+// PENTING: Export app agar Vercel bisa menjalankannya
+module.exports = app;
