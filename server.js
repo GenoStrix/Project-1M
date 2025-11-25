@@ -7,12 +7,8 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// --- HAPUS BAGIAN STATIC FILES ---
-// Kita tidak butuh app.use(express.static...) lagi
-// Kita tidak butuh app.get('/', ...) lagi
-// ---------------------------------
+// --- HANYA ADA KONEKSI DB & API DI SINI ---
 
-// Koneksi Database
 const db = mysql.createConnection({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
@@ -47,7 +43,7 @@ app.get("/api/dashboard", (req, res) => {
   });
 });
 
-// API Transaksi
+// API Get Transaksi
 app.get("/api/transactions", (req, res) => {
   const type = req.query.type;
   db.query(
@@ -60,6 +56,7 @@ app.get("/api/transactions", (req, res) => {
   );
 });
 
+// API Post Transaksi
 app.post("/api/transactions", (req, res) => {
   const {
     type,
@@ -81,7 +78,7 @@ app.post("/api/transactions", (req, res) => {
   );
 });
 
-// Export untuk Vercel
+// Export App (Wajib buat Vercel)
 const PORT = process.env.PORT || 3000;
 if (require.main === module) {
   app.listen(PORT, () => console.log(`Server jalan di port ${PORT}`));
