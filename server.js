@@ -2,51 +2,71 @@ require("dotenv").config();
 const express = require("express");
 const mysql = require("mysql2");
 const cors = require("cors");
+const path = require("path"); // <--- PENTING: Import module 'path'
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-app.use(express.static("public"));
+// --- BAGIAN PERBAIKAN START ---
 
-// Koneksi Database
+// 1. Beritahu server lokasi folder 'public' dengan cara absolut
+app.use(express.static(path.join(__dirname, "public")));
+
+// 2. Paksa server mengirim index.html saat user membuka halaman utama ('/')
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
+
+// --- BAGIAN PERBAIKAN END ---
+
+// Koneksi Database (TiDB)
 const db = mysql.createConnection({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
   port: process.env.DB_PORT,
-  ssl: { rejectUnauthorized: true }, // Wajib untuk TiDB
+  ssl: { rejectUnauthorized: true },
 });
 
-// 1. API untuk Dashboard (Hitung Target, Progress, Total Asset)
-app.get("/api/dashboard", (req, res) => {
-  // Ambil Target
-  const qTarget =
-    "SELECT setting_value FROM settings WHERE setting_key = 'savings_target'";
-  // Hitung Total per Akun (Main acc, Sec acc, dll)
-  const qAssets =
-    "SELECT account_name, SUM(amount) as total FROM transactions WHERE type='income' GROUP BY account_name";
-  // Hitung Pengeluaran per Akun (untuk mengurangi aset)
-  const qExpenses =
-    "SELECT account_name, SUM(amount) as total FROM transactions WHERE type='expenditure' GROUP BY account_name";
+// --- API ENDPOINTS ---
 
-  // Catatan: Logika hitungan lengkap akan kita taruh di sini nanti.
-  // Untuk tes awal, kita kirim data dummy dulu agar jalan.
-  res.json({
-    target: 10000000,
-    main_acc: 1073111,
-    sec_acc: 41250,
-    total_assets: 1073111 + 41250,
-    progress: 10.73,
+app.get("/api/dashboard", (req, res) => {
+  // Query Total Pemasukan
+  const qIncome =
+    "SELECT SUM(amount) as total FROM transactions WHERE type='income'";
+  // Query Total Pengeluaran
+  const qExpense =
+    "SELECT SUM(amount) as total FROM transactions WHERE type='expenditure'";
+
+  // Jalankan query secara paralel (sederhana)
+  db.query(qIncome, (err, resIncome) => {
+    if (err) return res.status(500).json(err);
+
+    db.query(qExpense, (err, resExpense) => {
+      if (err) return res.status(500).json(err);
+
+      const income = resIncome[0].total || 0;
+      const expense = resExpense[0].total || 0;
+      const total_assets = income - expense;
+
+      // Kirim data sederhana ke frontend
+      res.json({
+        target: 10000000, // Target statis dulu
+        main_acc: total_assets, // Anggap semua masuk main acc dulu
+        sec_acc: 0,
+        total_assets: total_assets,
+        progress: (total_assets / 10000000) * 100,
+      });
+    });
   });
 });
 
-// 2. API Ambil Data Transaksi
 app.get("/api/transactions", (req, res) => {
-  const type = req.query.type; // 'income' atau 'expenditure'
+  const type = req.query.type;
   db.query(
-    "SELECT * FROM transactions WHERE type = ?",
+    "SELECT * FROM transactions WHERE type = ? ORDER BY transaction_date DESC",
     [type],
     (err, results) => {
       if (err) return res.status(500).json(err);
@@ -55,7 +75,6 @@ app.get("/api/transactions", (req, res) => {
   );
 });
 
-// 3. API Tambah Transaksi
 app.post("/api/transactions", (req, res) => {
   const {
     type,
@@ -77,10 +96,10 @@ app.post("/api/transactions", (req, res) => {
   );
 });
 
+// --- PENTING UNTUK VERCEL ---
 const PORT = process.env.PORT || 3000;
 if (require.main === module) {
   app.listen(PORT, () => console.log(`Server jalan di port ${PORT}`));
 }
 
-// PENTING: Export app agar Vercel bisa menjalankannya
 module.exports = app;
