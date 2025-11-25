@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Manager</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+</head>
+<body>
+
+    <div class="container">
+        
+        <div class="dashboard">
+            
+            <div class="card savings-card">
+                <div class="card-header yellow-bg">
+                    <h1>SAVINGS</h1>
+                </div>
+                <div class="savings-stats">
+                    <div class="stat-box">
+                        <small>LAST UPDATE</small>
+                        <span id="last-update">-</span>
+                    </div>
+                    <div class="stat-box">
+                        <small>TARGET</small>
+                        <span id="savings-target">Rp0</span>
+                    </div>
+                    <div class="stat-box">
+                        <small>PROGRESS</small>
+                        <span id="savings-progress">0%</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card assets-card">
+                <div class="assets-row">
+                    <div class="asset-item">
+                        <h2 id="main-acc-val">Rp0</h2>
+                        <div class="bar blue-bg">Main acc assets value</div>
+                    </div>
+                    <div class="asset-item">
+                        <h2 id="sec-acc-val">Rp0</h2>
+                        <div class="bar blue-bg">Sec acc assets value</div>
+                    </div>
+                </div>
+                <div class="total-assets">
+                    <h1 id="total-assets">Rp0</h1>
+                    <div class="bar dark-blue-bg">TOTAL ASSETS VALUE</div>
+                </div>
+                <div class="dana-ghoib">
+                    <h2 id="dana-ghoib-val">Rp0</h2>
+                    <div class="bar orange-bg">DANA GHOIB</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="actions">
+            <button onclick="openModal()" class="btn-add">+ Tambah Transaksi</button>
+        </div>
+
+        <div class="tables-area">
+            
+            <div class="table-wrapper">
+                <div class="table-header yellow-bg">EXPENDITURE</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>DESC</th>
+                            <th>DATE</th>
+                            <th>VALUE</th>
+                            <th>ACCOUNT</th>
+                        </tr>
+                    </thead>
+                    <tbody id="expenditure-list">
+                        </tbody>
+                </table>
+            </div>
+
+            <div class="table-wrapper">
+                <div class="table-header yellow-bg">INCOME</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>DESC</th>
+                            <th>DATE</th>
+                            <th>VALUE</th>
+                            <th>ACCOUNT</th>
+                        </tr>
+                    </thead>
+                    <tbody id="income-list">
+                         </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+
+    <div id="transactionModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <h2>Tambah Transaksi</h2>
+            <form id="transactionForm">
+                <label>Tipe:</label>
+                <select id="type" required>
+                    <option value="income">Income (Pemasukan)</option>
+                    <option value="expenditure">Expenditure (Pengeluaran)</option>
+                </select>
+
+                <label>Deskripsi:</label>
+                <input type="text" id="description" placeholder="Contoh: Beli Makan" required>
+
+                <label>Kategori:</label
