@@ -2,21 +2,15 @@ require("dotenv").config();
 const express = require("express");
 const mysql = require("mysql2");
 const cors = require("cors");
-const path = require("path");
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// --- PERBAIKAN UTAMA DI SINI ---
-// Kita gunakan process.cwd() agar Vercel tidak tersesat mencari folder public
-app.use(express.static(path.join(process.cwd(), "public")));
-
-// Paksa kirim index.html jika user membuka halaman utama
-app.get("/", (req, res) => {
-  res.sendFile(path.join(process.cwd(), "public", "index.html"));
-});
-// -------------------------------
+// --- HAPUS BAGIAN STATIC FILES ---
+// Kita tidak butuh app.use(express.static...) lagi
+// Kita tidak butuh app.get('/', ...) lagi
+// ---------------------------------
 
 // Koneksi Database
 const db = mysql.createConnection({
@@ -87,7 +81,7 @@ app.post("/api/transactions", (req, res) => {
   );
 });
 
-// Setup Server untuk Vercel
+// Export untuk Vercel
 const PORT = process.env.PORT || 3000;
 if (require.main === module) {
   app.listen(PORT, () => console.log(`Server jalan di port ${PORT}`));

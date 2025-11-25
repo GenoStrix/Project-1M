@@ -1,5 +1,5 @@
 // Ganti URL ini nanti jika sudah upload ke Render
-const API_URL = "http://localhost:3000/api";
+const API_URL = "/api";
 
 // Format Uang ke Rupiah
 const formatRupiah = (number) => {
