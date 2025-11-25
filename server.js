@@ -2,25 +2,23 @@ require("dotenv").config();
 const express = require("express");
 const mysql = require("mysql2");
 const cors = require("cors");
-const path = require("path"); // <--- PENTING: Import module 'path'
+const path = require("path");
 
 const app = express();
 app.use(cors());
 app.use(express.json());
 
-// --- BAGIAN PERBAIKAN START ---
+// --- PERBAIKAN UTAMA DI SINI ---
+// Kita gunakan process.cwd() agar Vercel tidak tersesat mencari folder public
+app.use(express.static(path.join(process.cwd(), "public")));
 
-// 1. Beritahu server lokasi folder 'public' dengan cara absolut
-app.use(express.static(path.join(__dirname, "public")));
-
-// 2. Paksa server mengirim index.html saat user membuka halaman utama ('/')
+// Paksa kirim index.html jika user membuka halaman utama
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
+  res.sendFile(path.join(process.cwd(), "public", "index.html"));
 });
+// -------------------------------
 
-// --- BAGIAN PERBAIKAN END ---
-
-// Koneksi Database (TiDB)
+// Koneksi Database
 const db = mysql.createConnection({
   host: process.env.DB_HOST,
   user: process.env.DB_USER,
@@ -30,31 +28,23 @@ const db = mysql.createConnection({
   ssl: { rejectUnauthorized: true },
 });
 
-// --- API ENDPOINTS ---
-
+// API Dashboard
 app.get("/api/dashboard", (req, res) => {
-  // Query Total Pemasukan
   const qIncome =
     "SELECT SUM(amount) as total FROM transactions WHERE type='income'";
-  // Query Total Pengeluaran
   const qExpense =
     "SELECT SUM(amount) as total FROM transactions WHERE type='expenditure'";
 
-  // Jalankan query secara paralel (sederhana)
   db.query(qIncome, (err, resIncome) => {
     if (err) return res.status(500).json(err);
-
     db.query(qExpense, (err, resExpense) => {
       if (err) return res.status(500).json(err);
-
       const income = resIncome[0].total || 0;
       const expense = resExpense[0].total || 0;
       const total_assets = income - expense;
-
-      // Kirim data sederhana ke frontend
       res.json({
-        target: 10000000, // Target statis dulu
-        main_acc: total_assets, // Anggap semua masuk main acc dulu
+        target: 10000000,
+        main_acc: total_assets,
         sec_acc: 0,
         total_assets: total_assets,
         progress: (total_assets / 10000000) * 100,
@@ -63,6 +53,7 @@ app.get("/api/dashboard", (req, res) => {
   });
 });
 
+// API Transaksi
 app.get("/api/transactions", (req, res) => {
   const type = req.query.type;
   db.query(
@@ -96,10 +87,9 @@ app.post("/api/transactions", (req, res) => {
   );
 });
 
-// --- PENTING UNTUK VERCEL ---
+// Setup Server untuk Vercel
 const PORT = process.env.PORT || 3000;
 if (require.main === module) {
   app.listen(PORT, () => console.log(`Server jalan di port ${PORT}`));
 }
-
 module.exports = app;
